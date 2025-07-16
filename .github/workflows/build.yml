@@ -85,6 +85,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: nightly
           targets: ${{ matrix.settings.target }}
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
