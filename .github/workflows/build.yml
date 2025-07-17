@@ -20,50 +20,84 @@ env:
   CARGO_INCREMENTAL: '1'
 
 jobs:
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.generate.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate build matrix
+        id: generate
+        run: |
+          # Check if package.json exists
+          if [ ! -f "crates/binding/package.json" ]; then
+            echo "Error: crates/binding/package.json not found"
+            exit 1
+          fi
+
+          # Extract napi.targets from package.json
+          targets=$(cat crates/binding/package.json | jq -r '.napi.targets[]?')
+
+          if [ -z "$targets" ]; then
+            echo "Error: No napi.targets found in package.json"
+            exit 1
+          fi
+
+          # Define supported platforms and their build configurations
+          declare -A supported_platforms
+          supported_platforms["x86_64-apple-darwin"]='{"host": "macos-latest", "target": "x86_64-apple-darwin", "build": "pnpm build --target x86_64-apple-darwin"}'
+          supported_platforms["x86_64-pc-windows-msvc"]='{"host": "windows-latest", "target": "x86_64-pc-windows-msvc", "build": "pnpm build --target x86_64-pc-windows-msvc"}'
+          supported_platforms["i686-pc-windows-msvc"]='{"host": "windows-latest", "target": "i686-pc-windows-msvc", "build": "pnpm build --target i686-pc-windows-msvc"}'
+          supported_platforms["x86_64-unknown-linux-gnu"]='{"host": "ubuntu-22.04", "target": "x86_64-unknown-linux-gnu", "build": "pnpm build --target x86_64-unknown-linux-gnu --use-napi-cross"}'
+          supported_platforms["x86_64-unknown-linux-musl"]='{"host": "ubuntu-22.04", "target": "x86_64-unknown-linux-musl", "build": "pnpm build --target x86_64-unknown-linux-musl -x"}'
+          supported_platforms["aarch64-apple-darwin"]='{"host": "macos-latest", "target": "aarch64-apple-darwin", "build": "pnpm build --target aarch64-apple-darwin"}'
+          supported_platforms["aarch64-unknown-linux-gnu"]='{"host": "ubuntu-22.04", "target": "aarch64-unknown-linux-gnu", "build": "pnpm build --target aarch64-unknown-linux-gnu --use-cross"}'
+          supported_platforms["armv7-unknown-linux-gnueabihf"]='{"host": "ubuntu-22.04", "target": "armv7-unknown-linux-gnueabihf", "build": "pnpm build --target armv7-unknown-linux-gnueabihf --use-cross"}'
+          supported_platforms["aarch64-linux-android"]='{"host": "ubuntu-22.04", "target": "aarch64-linux-android", "build": "pnpm build --target aarch64-linux-android"}'
+          supported_platforms["armv7-linux-androideabi"]='{"host": "ubuntu-22.04", "target": "armv7-linux-androideabi", "build": "pnpm build --target armv7-linux-androideabi"}'
+          supported_platforms["aarch64-unknown-linux-musl"]='{"host": "ubuntu-22.04", "target": "aarch64-unknown-linux-musl", "build": "pnpm build --target aarch64-unknown-linux-musl -x"}'
+          supported_platforms["aarch64-pc-windows-msvc"]='{"host": "windows-latest", "target": "aarch64-pc-windows-msvc", "build": "pnpm build --target aarch64-pc-windows-msvc"}'
+
+          # Validate targets and build matrix
+          matrix_items=()
+          unsupported_targets=()
+
+          for target in $targets; do
+            if [[ -n "${supported_platforms[$target]}" ]]; then
+              matrix_items+=("${supported_platforms[$target]}")
+            else
+              unsupported_targets+=("$target")
+            fi
+          done
+
+          # Check for unsupported targets
+          if [ ${#unsupported_targets[@]} -gt 0 ]; then
+            echo "Error: Unsupported targets found: ${unsupported_targets[*]}"
+            echo "Supported targets are:"
+            for key in "${!supported_platforms[@]}"; do
+              echo "  - $key"
+            done
+            exit 1
+          fi
+
+          # Generate matrix JSON
+          matrix_json=$(printf '%s\n' "${matrix_items[@]}" | jq -s -c '{"settings": .}')
+
+          # Use proper multiline output format for GitHub Actions
+          {
+            echo "matrix<<EOF"
+            echo "$matrix_json"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+          echo "Generated matrix for targets: $targets"
+          echo "Matrix: $matrix_json"
+
   build:
+    needs: generate-matrix
     strategy:
       fail-fast: false
-      matrix:
-        settings:
-          - host: macos-latest
-            target: x86_64-apple-darwin
-            build: pnpm build --target x86_64-apple-darwin
-          - host: windows-latest
-            build: pnpm build --target x86_64-pc-windows-msvc
-            target: x86_64-pc-windows-msvc
-          - host: windows-latest
-            build: pnpm build --target i686-pc-windows-msvc
-            target: i686-pc-windows-msvc
-          - host: ubuntu-22.04
-            target: x86_64-unknown-linux-gnu
-            build: pnpm build --target x86_64-unknown-linux-gnu --use-napi-cross
-          - host: ubuntu-22.04
-            target: x86_64-unknown-linux-musl
-            build: pnpm build --target x86_64-unknown-linux-musl -x
-          - host: macos-latest
-            target: aarch64-apple-darwin
-            build: pnpm build --target aarch64-apple-darwin
-          - host: ubuntu-22.04
-            target: aarch64-unknown-linux-gnu
-            build: pnpm build --target aarch64-unknown-linux-gnu --use-cross
-          - host: ubuntu-22.04
-            target: armv7-unknown-linux-gnueabihf
-            build: pnpm build --target armv7-unknown-linux-gnueabihf --use-cross
-          - host: ubuntu-22.04
-            target: aarch64-linux-android
-            build: pnpm build --target aarch64-linux-android
-          - host: ubuntu-22.04
-            target: armv7-linux-androideabi
-            build: pnpm build --target armv7-linux-androideabi
-          - host: ubuntu-22.04
-            target: aarch64-unknown-linux-musl
-            build: pnpm build --target aarch64-unknown-linux-musl -x
-          - host: windows-latest
-            target: aarch64-pc-windows-msvc
-            build: pnpm build --target aarch64-pc-windows-msvc
-          # - host: ubuntu-22.04
-          #   target: wasm32-wasip1-threads
-          #   build: pnpm build --target wasm32-wasip1-threads
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     name: stable - ${{ matrix.settings.target }} - node@${{ inputs.node-version }}
     runs-on: ${{ matrix.settings.host }}
     steps:
