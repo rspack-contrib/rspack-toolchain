@@ -39,12 +39,26 @@ runs:
         fi
 
         # Extract napi.targets from package.json
-        targets=$(cat "${{ inputs.package-json-path }}" | jq -r '.napi.targets[]?')
+        # Use jq to extract and clean targets in one step
+        targets=$(cat "${{ inputs.package-json-path }}" | jq -r '.napi.targets[]?' | sed 's/\r$//')
 
         if [ -z "$targets" ]; then
           echo "Error: No napi.targets found in package.json"
           exit 1
         fi
+
+        # Debug: Show raw targets
+        echo "Raw targets from jq:"
+        echo "$targets"
+        echo "--- End of raw targets ---"
+
+        # Convert to array for easier processing
+        targets_array=()
+        while IFS= read -r line; do
+          [ -n "$line" ] && targets_array+=("$line")
+        done <<< "$targets"
+
+        echo "Found ${#targets_array[@]} targets"
 
         # Function to get platform configuration
         get_platform_config() {
@@ -96,11 +110,22 @@ runs:
         matrix_items=()
         unsupported_targets=()
 
-        for target in $targets; do
+        for target in "${targets_array[@]}"; do
+          # Debug: print the target being processed
+          echo "Processing target: '$target'"
+          echo "Target length: ${#target}"
+          
+          # Clean the target string more aggressively
+          target=$(echo "$target" | tr -d '\r\n\t ' | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
+          echo "Cleaned target: '$target'"
+          echo "Cleaned target length: ${#target}"
+          
           config=$(get_platform_config "$target")
+          echo "Config for '$target': '$config'"
           if [ -n "$config" ]; then
             matrix_items+=("$config")
           else
+            echo "ERROR: No config found for target '$target'"
             unsupported_targets+=("$target")
           fi
         done
