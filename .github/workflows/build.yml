@@ -117,12 +117,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: bindings-${{ matrix.settings.target }}
-          path: '*.node'
+          path: 'crates/binding/*.node'
           if-no-files-found: error
       - name: Upload artifact (wasm files)
         if: ${{ matrix.settings.target == 'wasm32-wasip1-threads' }}
         uses: actions/upload-artifact@v4
         with:
           name: bindings-${{ matrix.settings.target }}
-          path: '*.wasm'
+          path: 'crates/binding/*.wasm'
           if-no-files-found: error
