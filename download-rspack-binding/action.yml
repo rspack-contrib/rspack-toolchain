@@ -19,7 +19,6 @@ runs:
       with:
         name: bindings-${{ inputs.target }}
         path: ${{ inputs.path }}
-      shell: bash
 
     - name: Download all bindings
       if: inputs.target == ''
@@ -27,4 +26,3 @@ runs:
       with:
         pattern: bindings-*
         path: ${{ inputs.path }}
-      shell: bash
