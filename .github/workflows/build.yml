@@ -7,15 +7,14 @@ on:
         required: false
         default: '22'
         type: string
-      app-name:
-        description: 'Application name'
+      package-json-path:
+        description: 'Path to binding `package.json`. This option is the same as `--package-json-path` in `@napi-rs/cli build`.'
         required: false
-        default: 'package-template'
+        default: 'crates/binding/package.json'
         type: string
 
 env:
   DEBUG: napi:*
-  APP_NAME: ${{ inputs.app-name }}
   MACOSX_DEPLOYMENT_TARGET: '10.13'
   CARGO_INCREMENTAL: '1'
 
@@ -28,15 +27,17 @@ jobs:
       - uses: actions/checkout@v4
       - name: Generate build matrix
         id: generate
+        env:
+          PACKAGE_JSON_PATH: ${{ inputs.package-json-path }}
         run: |
           # Check if package.json exists
-          if [ ! -f "crates/binding/package.json" ]; then
-            echo "Error: crates/binding/package.json not found"
+          if [ ! -f "$PACKAGE_JSON_PATH" ]; then
+            echo "Error: $PACKAGE_JSON_PATH not found"
             exit 1
           fi
 
           # Extract napi.targets from package.json
-          targets=$(cat crates/binding/package.json | jq -r '.napi.targets[]?')
+          targets=$(cat "$PACKAGE_JSON_PATH" | jq -r '.napi.targets[]?')
 
           if [ -z "$targets" ]; then
             echo "Error: No napi.targets found in package.json"
