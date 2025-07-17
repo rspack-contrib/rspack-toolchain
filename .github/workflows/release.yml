@@ -9,9 +9,8 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: rspack-contrib/rspack-toolchain/download-rspack-binding@main
         with:
-          pattern: bindings-*
           path: artifacts
 
       - name: List packages

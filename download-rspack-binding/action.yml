@@ -1,0 +1,30 @@
+name: 'Download Rspack Binding'
+description: 'Download rspack binding artifacts with optional target filtering'
+
+inputs:
+  target:
+    description: 'Specific target to download (e.g., x86_64-apple-darwin). If not provided, downloads all bindings-* artifacts'
+    required: false
+  path:
+    description: 'Destination path for downloaded artifacts'
+    required: false
+    default: 'artifacts'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Download specific target binding
+      if: inputs.target != ''
+      uses: actions/download-artifact@v4
+      with:
+        name: bindings-${{ inputs.target }}
+        path: ${{ inputs.path }}
+      shell: bash
+
+    - name: Download all bindings
+      if: inputs.target == ''
+      uses: actions/download-artifact@v4
+      with:
+        pattern: bindings-*
+        path: ${{ inputs.path }}
+      shell: bash
