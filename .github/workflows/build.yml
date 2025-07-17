@@ -45,10 +45,10 @@ jobs:
             build: pnpm build --target aarch64-apple-darwin
           - host: ubuntu-22.04
             target: aarch64-unknown-linux-gnu
-            build: pnpm build --target aarch64-unknown-linux-gnu --use-napi-cross
+            build: CC=clang pnpm build --target aarch64-unknown-linux-gnu --use-napi-cross
           - host: ubuntu-22.04
             target: armv7-unknown-linux-gnueabihf
-            build: pnpm build --target armv7-unknown-linux-gnueabihf --use-napi-cross
+            build: CC=clang pnpm build --target armv7-unknown-linux-gnueabihf --use-napi-cross
           - host: ubuntu-22.04
             target: aarch64-linux-android
             build: pnpm build --target aarch64-linux-android
