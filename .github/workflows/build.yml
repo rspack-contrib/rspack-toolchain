@@ -45,10 +45,10 @@ jobs:
             build: pnpm build --target aarch64-apple-darwin
           - host: ubuntu-22.04
             target: aarch64-unknown-linux-gnu
-            build: CC=clang pnpm build --target aarch64-unknown-linux-gnu --use-napi-cross
+            build: pnpm build --target aarch64-unknown-linux-gnu --use-cross
           - host: ubuntu-22.04
             target: armv7-unknown-linux-gnueabihf
-            build: CC=clang pnpm build --target armv7-unknown-linux-gnueabihf --use-napi-cross
+            build: pnpm build --target armv7-unknown-linux-gnueabihf --use-cross
           - host: ubuntu-22.04
             target: aarch64-linux-android
             build: pnpm build --target aarch64-linux-android
@@ -107,6 +107,9 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           tool: cargo-zigbuild
+      - name: Install cross
+        if: ${{ matrix.settings.target == 'aarch64-unknown-linux-gnu' || matrix.settings.target == 'armv7-unknown-linux-gnueabihf' }}
+        run: cargo install cross --git https://github.com/cross-rs/cross
       - name: Install dependencies
         run: pnpm install
       - name: Build
