@@ -61,9 +61,9 @@ jobs:
           - host: windows-latest
             target: aarch64-pc-windows-msvc
             build: pnpm build --target aarch64-pc-windows-msvc
-          - host: ubuntu-22.04
-            target: wasm32-wasip1-threads
-            build: pnpm build --target wasm32-wasip1-threads
+          # - host: ubuntu-22.04
+          #   target: wasm32-wasip1-threads
+          #   build: pnpm build --target wasm32-wasip1-threads
     name: stable - ${{ matrix.settings.target }} - node@${{ inputs.node-version }}
     runs-on: ${{ matrix.settings.host }}
     steps:
@@ -122,10 +122,10 @@ jobs:
           name: bindings-${{ matrix.settings.target }}
           path: 'crates/binding/*.node'
           if-no-files-found: error
-      - name: Upload artifact (wasm files)
-        if: ${{ matrix.settings.target == 'wasm32-wasip1-threads' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: bindings-${{ matrix.settings.target }}
-          path: 'crates/binding/*.wasm'
-          if-no-files-found: error
+      # - name: Upload artifact (wasm files)
+      #   if: ${{ matrix.settings.target == 'wasm32-wasip1-threads' }}
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: bindings-${{ matrix.settings.target }}
+      #     path: 'crates/binding/*.wasm'
+      #     if-no-files-found: error
