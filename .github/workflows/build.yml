@@ -24,87 +24,25 @@ env:
   CARGO_INCREMENTAL: '1'
 
 jobs:
-  generate-matrix:
+  get-napi-info:
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.generate.outputs.matrix }}
+      matrix: ${{ steps.napi-info.outputs.matrix }}
+      binding-path: ${{ steps.napi-info.outputs.binding-path }}
     steps:
       - uses: actions/checkout@v4
-      - name: Generate build matrix
-        id: generate
-        env:
-          PACKAGE_JSON_PATH: ${{ inputs.package-json-path }}
-          NAPI_BUILD_COMMAND: ${{ inputs.napi-build-command }}
-        run: |
-          # Check if package.json exists
-          if [ ! -f "$PACKAGE_JSON_PATH" ]; then
-            echo "Error: $PACKAGE_JSON_PATH not found"
-            exit 1
-          fi
-
-          # Extract napi.targets from package.json
-          targets=$(cat "$PACKAGE_JSON_PATH" | jq -r '.napi.targets[]?')
-
-          if [ -z "$targets" ]; then
-            echo "Error: No napi.targets found in package.json"
-            exit 1
-          fi
-
-          # Define supported platforms and their build configurations
-          declare -A supported_platforms
-          supported_platforms["x86_64-apple-darwin"]='{"host": "macos-latest", "target": "x86_64-apple-darwin", "build": "'$NAPI_BUILD_COMMAND' --target x86_64-apple-darwin"}'
-          supported_platforms["x86_64-pc-windows-msvc"]='{"host": "windows-latest", "target": "x86_64-pc-windows-msvc", "build": "'$NAPI_BUILD_COMMAND' --target x86_64-pc-windows-msvc"}'
-          supported_platforms["i686-pc-windows-msvc"]='{"host": "windows-latest", "target": "i686-pc-windows-msvc", "build": "'$NAPI_BUILD_COMMAND' --target i686-pc-windows-msvc"}'
-          supported_platforms["x86_64-unknown-linux-gnu"]='{"host": "ubuntu-22.04", "target": "x86_64-unknown-linux-gnu", "build": "'$NAPI_BUILD_COMMAND' --target x86_64-unknown-linux-gnu --use-napi-cross"}'
-          supported_platforms["x86_64-unknown-linux-musl"]='{"host": "ubuntu-22.04", "target": "x86_64-unknown-linux-musl", "build": "'$NAPI_BUILD_COMMAND' --target x86_64-unknown-linux-musl -x"}'
-          supported_platforms["aarch64-apple-darwin"]='{"host": "macos-latest", "target": "aarch64-apple-darwin", "build": "'$NAPI_BUILD_COMMAND' --target aarch64-apple-darwin"}'
-          supported_platforms["aarch64-unknown-linux-gnu"]='{"host": "ubuntu-22.04", "target": "aarch64-unknown-linux-gnu", "build": "'$NAPI_BUILD_COMMAND' --target aarch64-unknown-linux-gnu --use-cross"}'
-          supported_platforms["armv7-unknown-linux-gnueabihf"]='{"host": "ubuntu-22.04", "target": "armv7-unknown-linux-gnueabihf", "build": "'$NAPI_BUILD_COMMAND' --target armv7-unknown-linux-gnueabihf --use-cross"}'
-          supported_platforms["aarch64-linux-android"]='{"host": "ubuntu-22.04", "target": "aarch64-linux-android", "build": "'$NAPI_BUILD_COMMAND' --target aarch64-linux-android"}'
-          supported_platforms["armv7-linux-androideabi"]='{"host": "ubuntu-22.04", "target": "armv7-linux-androideabi", "build": "'$NAPI_BUILD_COMMAND' --target armv7-linux-androideabi"}'
-          supported_platforms["aarch64-unknown-linux-musl"]='{"host": "ubuntu-22.04", "target": "aarch64-unknown-linux-musl", "build": "'$NAPI_BUILD_COMMAND' --target aarch64-unknown-linux-musl -x"}'
-          supported_platforms["aarch64-pc-windows-msvc"]='{"host": "windows-latest", "target": "aarch64-pc-windows-msvc", "build": "'$NAPI_BUILD_COMMAND' --target aarch64-pc-windows-msvc"}'
-
-          # Validate targets and build matrix
-          matrix_items=()
-          unsupported_targets=()
-
-          for target in $targets; do
-            if [[ -n "${supported_platforms[$target]}" ]]; then
-              matrix_items+=("${supported_platforms[$target]}")
-            else
-              unsupported_targets+=("$target")
-            fi
-          done
-
-          # Check for unsupported targets
-          if [ ${#unsupported_targets[@]} -gt 0 ]; then
-            echo "Error: Unsupported targets found: ${unsupported_targets[*]}"
-            echo "Supported targets are:"
-            for key in "${!supported_platforms[@]}"; do
-              echo "  - $key"
-            done
-            exit 1
-          fi
-
-          # Generate matrix JSON
-          matrix_json=$(printf '%s\n' "${matrix_items[@]}" | jq -s -c '{"settings": .}')
-
-          # Use proper multiline output format for GitHub Actions
-          {
-            echo "matrix<<EOF"
-            echo "$matrix_json"
-            echo "EOF"
-          } >> $GITHUB_OUTPUT
-
-          echo "Generated matrix for targets: $targets"
-          echo "Matrix: $matrix_json"
+      - name: Get NAPI Info
+        id: napi-info
+        uses: ./get-napi-info
+        with:
+          package-json-path: ${{ inputs.package-json-path }}
+          napi-build-command: ${{ inputs.napi-build-command }}
 
   build:
-    needs: generate-matrix
+    needs: get-napi-info
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.get-napi-info.outputs.matrix) }}
     name: stable - ${{ matrix.settings.target }} - node@${{ inputs.node-version }}
     runs-on: ${{ matrix.settings.host }}
     steps:
@@ -156,24 +94,17 @@ jobs:
       - name: Build
         run: ${{ matrix.settings.build }}
         shell: bash
-      - name: Calculate binding path
-        id: binding-path
-        run: |
-          BINDING_DIR=$(dirname "${{ inputs.package-json-path }}")
-          echo "dir=$BINDING_DIR" >> $GITHUB_OUTPUT
-          echo "Binding directory: $BINDING_DIR"
-        shell: bash
       - name: Upload artifact (node files)
         if: ${{ matrix.settings.target != 'wasm32-wasip1-threads' }}
         uses: actions/upload-artifact@v4
         with:
           name: bindings-${{ matrix.settings.target }}
-          path: '${{ steps.binding-path.outputs.dir }}/*.node'
+          path: '${{ needs.get-napi-info.outputs.binding-path }}/*.node'
           if-no-files-found: error
       # - name: Upload artifact (wasm files)
       #   if: ${{ matrix.settings.target == 'wasm32-wasip1-threads' }}
       #   uses: actions/upload-artifact@v4
       #   with:
       #     name: bindings-${{ matrix.settings.target }}
-      #     path: '${{ steps.binding-path.outputs.dir }}/*.wasm'
+      #     path: '${{ needs.get-napi-info.outputs.binding-path }}/*.wasm'
       #     if-no-files-found: error
