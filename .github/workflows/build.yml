@@ -156,17 +156,24 @@ jobs:
       - name: Build
         run: ${{ matrix.settings.build }}
         shell: bash
+      - name: Calculate binding path
+        id: binding-path
+        run: |
+          BINDING_DIR=$(dirname "${{ inputs.package-json-path }}")
+          echo "dir=$BINDING_DIR" >> $GITHUB_OUTPUT
+          echo "Binding directory: $BINDING_DIR"
+        shell: bash
       - name: Upload artifact (node files)
         if: ${{ matrix.settings.target != 'wasm32-wasip1-threads' }}
         uses: actions/upload-artifact@v4
         with:
           name: bindings-${{ matrix.settings.target }}
-          path: 'crates/binding/*.node'
+          path: '${{ steps.binding-path.outputs.dir }}/*.node'
           if-no-files-found: error
       # - name: Upload artifact (wasm files)
       #   if: ${{ matrix.settings.target == 'wasm32-wasip1-threads' }}
       #   uses: actions/upload-artifact@v4
       #   with:
       #     name: bindings-${{ matrix.settings.target }}
-      #     path: 'crates/binding/*.wasm'
+      #     path: '${{ steps.binding-path.outputs.dir }}/*.wasm'
       #     if-no-files-found: error
