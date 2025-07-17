@@ -12,6 +12,11 @@ on:
         required: false
         default: 'crates/binding/package.json'
         type: string
+      napi-build-command:
+        description: 'Command to call `napi build`. Use this option as an alias to build napi binding package.'
+        required: false
+        default: 'pnpm build'
+        type: string
 
 env:
   DEBUG: napi:*
@@ -29,6 +34,7 @@ jobs:
         id: generate
         env:
           PACKAGE_JSON_PATH: ${{ inputs.package-json-path }}
+          NAPI_BUILD_COMMAND: ${{ inputs.napi-build-command }}
         run: |
           # Check if package.json exists
           if [ ! -f "$PACKAGE_JSON_PATH" ]; then
@@ -46,18 +52,18 @@ jobs:
 
           # Define supported platforms and their build configurations
           declare -A supported_platforms
-          supported_platforms["x86_64-apple-darwin"]='{"host": "macos-latest", "target": "x86_64-apple-darwin", "build": "pnpm build --target x86_64-apple-darwin"}'
-          supported_platforms["x86_64-pc-windows-msvc"]='{"host": "windows-latest", "target": "x86_64-pc-windows-msvc", "build": "pnpm build --target x86_64-pc-windows-msvc"}'
-          supported_platforms["i686-pc-windows-msvc"]='{"host": "windows-latest", "target": "i686-pc-windows-msvc", "build": "pnpm build --target i686-pc-windows-msvc"}'
-          supported_platforms["x86_64-unknown-linux-gnu"]='{"host": "ubuntu-22.04", "target": "x86_64-unknown-linux-gnu", "build": "pnpm build --target x86_64-unknown-linux-gnu --use-napi-cross"}'
-          supported_platforms["x86_64-unknown-linux-musl"]='{"host": "ubuntu-22.04", "target": "x86_64-unknown-linux-musl", "build": "pnpm build --target x86_64-unknown-linux-musl -x"}'
-          supported_platforms["aarch64-apple-darwin"]='{"host": "macos-latest", "target": "aarch64-apple-darwin", "build": "pnpm build --target aarch64-apple-darwin"}'
-          supported_platforms["aarch64-unknown-linux-gnu"]='{"host": "ubuntu-22.04", "target": "aarch64-unknown-linux-gnu", "build": "pnpm build --target aarch64-unknown-linux-gnu --use-cross"}'
-          supported_platforms["armv7-unknown-linux-gnueabihf"]='{"host": "ubuntu-22.04", "target": "armv7-unknown-linux-gnueabihf", "build": "pnpm build --target armv7-unknown-linux-gnueabihf --use-cross"}'
-          supported_platforms["aarch64-linux-android"]='{"host": "ubuntu-22.04", "target": "aarch64-linux-android", "build": "pnpm build --target aarch64-linux-android"}'
-          supported_platforms["armv7-linux-androideabi"]='{"host": "ubuntu-22.04", "target": "armv7-linux-androideabi", "build": "pnpm build --target armv7-linux-androideabi"}'
-          supported_platforms["aarch64-unknown-linux-musl"]='{"host": "ubuntu-22.04", "target": "aarch64-unknown-linux-musl", "build": "pnpm build --target aarch64-unknown-linux-musl -x"}'
-          supported_platforms["aarch64-pc-windows-msvc"]='{"host": "windows-latest", "target": "aarch64-pc-windows-msvc", "build": "pnpm build --target aarch64-pc-windows-msvc"}'
+          supported_platforms["x86_64-apple-darwin"]='{"host": "macos-latest", "target": "x86_64-apple-darwin", "build": "'$NAPI_BUILD_COMMAND' --target x86_64-apple-darwin"}'
+          supported_platforms["x86_64-pc-windows-msvc"]='{"host": "windows-latest", "target": "x86_64-pc-windows-msvc", "build": "'$NAPI_BUILD_COMMAND' --target x86_64-pc-windows-msvc"}'
+          supported_platforms["i686-pc-windows-msvc"]='{"host": "windows-latest", "target": "i686-pc-windows-msvc", "build": "'$NAPI_BUILD_COMMAND' --target i686-pc-windows-msvc"}'
+          supported_platforms["x86_64-unknown-linux-gnu"]='{"host": "ubuntu-22.04", "target": "x86_64-unknown-linux-gnu", "build": "'$NAPI_BUILD_COMMAND' --target x86_64-unknown-linux-gnu --use-napi-cross"}'
+          supported_platforms["x86_64-unknown-linux-musl"]='{"host": "ubuntu-22.04", "target": "x86_64-unknown-linux-musl", "build": "'$NAPI_BUILD_COMMAND' --target x86_64-unknown-linux-musl -x"}'
+          supported_platforms["aarch64-apple-darwin"]='{"host": "macos-latest", "target": "aarch64-apple-darwin", "build": "'$NAPI_BUILD_COMMAND' --target aarch64-apple-darwin"}'
+          supported_platforms["aarch64-unknown-linux-gnu"]='{"host": "ubuntu-22.04", "target": "aarch64-unknown-linux-gnu", "build": "'$NAPI_BUILD_COMMAND' --target aarch64-unknown-linux-gnu --use-cross"}'
+          supported_platforms["armv7-unknown-linux-gnueabihf"]='{"host": "ubuntu-22.04", "target": "armv7-unknown-linux-gnueabihf", "build": "'$NAPI_BUILD_COMMAND' --target armv7-unknown-linux-gnueabihf --use-cross"}'
+          supported_platforms["aarch64-linux-android"]='{"host": "ubuntu-22.04", "target": "aarch64-linux-android", "build": "'$NAPI_BUILD_COMMAND' --target aarch64-linux-android"}'
+          supported_platforms["armv7-linux-androideabi"]='{"host": "ubuntu-22.04", "target": "armv7-linux-androideabi", "build": "'$NAPI_BUILD_COMMAND' --target armv7-linux-androideabi"}'
+          supported_platforms["aarch64-unknown-linux-musl"]='{"host": "ubuntu-22.04", "target": "aarch64-unknown-linux-musl", "build": "'$NAPI_BUILD_COMMAND' --target aarch64-unknown-linux-musl -x"}'
+          supported_platforms["aarch64-pc-windows-msvc"]='{"host": "windows-latest", "target": "aarch64-pc-windows-msvc", "build": "'$NAPI_BUILD_COMMAND' --target aarch64-pc-windows-msvc"}'
 
           # Validate targets and build matrix
           matrix_items=()
