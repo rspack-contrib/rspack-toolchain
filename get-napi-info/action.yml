@@ -13,9 +13,9 @@ outputs:
   matrix:
     description: 'Generated build matrix for napi targets'
     value: ${{ steps.generate.outputs.matrix }}
-  binding-path:
+  binding-directory:
     description: 'Path to directory containing *.node files'
-    value: ${{ steps.paths.outputs.binding-path }}
+    value: ${{ steps.paths.outputs.binding-directory }}
   targets:
     description: 'List of napi targets'
     value: ${{ steps.generate.outputs.targets }}
@@ -26,7 +26,7 @@ runs:
       id: paths
       run: |
         BINDING_DIR=$(dirname "${{ inputs.package-json-path }}")
-        echo "binding-path=$BINDING_DIR" >> $GITHUB_OUTPUT
+        echo "binding-directory=$BINDING_DIR" >> $GITHUB_OUTPUT
         echo "Binding directory: $BINDING_DIR"
       shell: bash
     - name: Generate build matrix

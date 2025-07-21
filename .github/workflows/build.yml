@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.napi-info.outputs.matrix }}
-      binding-path: ${{ steps.napi-info.outputs.binding-path }}
+      binding-directory: ${{ steps.napi-info.outputs.binding-directory }}
     steps:
       - uses: actions/checkout@v4
       - name: Get NAPI Info
@@ -94,12 +94,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: bindings-${{ matrix.settings.target }}
-          path: '${{ needs.get-napi-info.outputs.binding-path }}/*.node'
+          path: '${{ needs.get-napi-info.outputs.binding-directory }}/*.node'
           if-no-files-found: error
       # - name: Upload artifact (wasm files)
       #   if: ${{ matrix.settings.target == 'wasm32-wasip1-threads' }}
       #   uses: actions/upload-artifact@v4
       #   with:
       #     name: bindings-${{ matrix.settings.target }}
-      #     path: '${{ needs.get-napi-info.outputs.binding-path }}/*.wasm'
+      #     path: '${{ needs.get-napi-info.outputs.binding-directory }}/*.wasm'
       #     if-no-files-found: error

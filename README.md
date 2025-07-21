@@ -57,11 +57,11 @@ Extracts NAPI targets from `package.json` and generates a build matrix for cross
 
 #### Outputs
 
-| Name           | Description                                           |
-| -------------- | ----------------------------------------------------- |
-| `matrix`       | Generated build matrix for napi targets (JSON format) |
-| `binding-path` | Path to directory containing `*.node` files           |
-| `targets`      | List of napi targets (JSON array)                     |
+| Name                | Description                                           |
+| ------------------- | ----------------------------------------------------- |
+| `matrix`            | Generated build matrix for napi targets (JSON format) |
+| `binding-directory` | Path to directory containing `*.node` files           |
+| `targets`           | List of napi targets (JSON array)                     |
 
 #### Package Manager Command Syntax
 
@@ -163,7 +163,7 @@ jobs:
     outputs:
       matrix: ${{ steps.napi.outputs.matrix }}
       targets: ${{ steps.napi.outputs.targets }}
-      binding-path: ${{ steps.napi.outputs.binding-path }}
+      binding-directory: ${{ steps.napi.outputs.binding-directory }}
     steps:
       - uses: actions/checkout@v4
       - id: napi
