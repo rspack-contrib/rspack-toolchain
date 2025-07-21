@@ -2,6 +2,12 @@
 
 A collection of reusable GitHub Actions for building and distributing Rspack native bindings across multiple platforms.
 
+## ⚙️ Configuration
+
+The default values in this toolchain are determined based on [@rspack-contrib/rspack-binding-template](https://github.com/rspack-contrib/rspack-binding-template), including default package.json paths, build commands, and other configurations.
+
+You can also customize the input configurations for each action to adapt to your own rspack custom binding repository. Please refer to the detailed documentation of each action for specific input parameters.
+
 ## 📦 Actions
 
 ### 🔽 Download Rspack Binding
