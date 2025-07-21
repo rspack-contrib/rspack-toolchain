@@ -88,6 +88,7 @@ jobs:
         run: pnpm install
       - name: Build
         run: ${{ matrix.settings.build }}
+        working-directory: ${{ needs.get-napi-info.outputs.binding-directory }}
         shell: bash
       - name: Upload artifact (node files)
         if: ${{ matrix.settings.target != 'wasm32-wasip1-threads' }}
