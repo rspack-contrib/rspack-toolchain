@@ -50,10 +50,10 @@ Extracts NAPI targets from `package.json` and generates a build matrix for cross
 
 #### Inputs
 
-| Name                 | Description                                                                                                                                          | Required | Default                       |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------- |
-| `package-json-path`  | Path to binding package.json                                                                                                                         | No       | `crates/binding/package.json` |
-| `napi-build-command` | Command to call napi build. You can pass `--release` to build optimized release binaries ([see all options](https://napi.rs/docs/cli/build#options)) | No       | `pnpm build`                  |
+| Name                 | Description                                                                                                                                                                                                                                                 | Required | Default                       |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------- |
+| `package-json-path`  | Path to binding package.json                                                                                                                                                                                                                                | No       | `crates/binding/package.json` |
+| `napi-build-command` | Command to call napi build. You can pass `--release` to build optimized release binaries ([see all options](https://napi.rs/docs/cli/build#options)). **Note**: Different package managers have different syntax for passing arguments (see examples below) | No       | `pnpm build`                  |
 
 #### Outputs
 
@@ -62,6 +62,78 @@ Extracts NAPI targets from `package.json` and generates a build matrix for cross
 | `matrix`       | Generated build matrix for napi targets (JSON format) |
 | `binding-path` | Path to directory containing `*.node` files           |
 | `targets`      | List of napi targets (JSON array)                     |
+
+#### Package Manager Command Syntax
+
+The `napi-build-command` parameter works differently with various package managers because the action automatically appends `--target <target>` to your command.
+
+**Important**: It's assumed that commands like `pnpm build`, `npm run build`, and `yarn build` are configured in your `package.json` scripts to execute `napi build`. For example:
+
+```json
+{
+  "scripts": {
+    "build": "napi build --platform"
+  }
+}
+```
+
+Here are the correct syntax patterns for each package manager:
+
+##### pnpm
+
+With pnpm, you can pass arguments directly to the script:
+
+```yaml
+- uses: rspack-contrib/rspack-toolchain/get-napi-info@main
+  with:
+    napi-build-command: pnpm build
+    # Will generate: pnpm build --target x86_64-apple-darwin
+```
+
+For release builds:
+
+```yaml
+napi-build-command: pnpm build --release
+# Will generate: pnpm build --release --target x86_64-apple-darwin
+```
+
+##### npm
+
+With npm, you need to use the `--` separator when your script needs additional arguments:
+
+```yaml
+- uses: rspack-contrib/rspack-toolchain/get-napi-info@main
+  with:
+    napi-build-command: npm run build --
+    # Will generate: npm run build -- --target x86_64-apple-darwin
+```
+
+For release builds:
+
+```yaml
+napi-build-command: npm run build -- --release
+# Will generate: npm run build -- --release --target x86_64-apple-darwin
+```
+
+##### yarn
+
+With yarn, similar to npm, you need the `--` separator:
+
+```yaml
+- uses: rspack-contrib/rspack-toolchain/get-napi-info@main
+  with:
+    napi-build-command: yarn build --
+    # Will generate: yarn build -- --target x86_64-apple-darwin
+```
+
+For release builds:
+
+```yaml
+napi-build-command: yarn build -- --release
+# Will generate: yarn build -- --release --target x86_64-apple-darwin
+```
+
+> **⚠️ Important**: The action automatically appends `--target <target>` to your command for each target in the build matrix. Make sure your command syntax is compatible with this behavior for your chosen package manager.
 
 #### Supported Targets
 
@@ -98,7 +170,7 @@ jobs:
         uses: rspack-contrib/rspack-toolchain/get-napi-info@main
         with:
           package-json-path: packages/binding/package.json
-          napi-build-command: npm run build
+          napi-build-command: pnpm build
 
   build:
     needs: get-info
@@ -127,10 +199,10 @@ A reusable workflow that automatically builds native bindings for all platforms 
 
 #### Inputs
 
-| Name                 | Description                                                                                                                                                                                        | Required | Default                       |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------- |
-| `package-json-path`  | Path to binding `package.json`. Same as `--package-json-path` in `@napi-rs/cli build`                                                                                                              | No       | `crates/binding/package.json` |
-| `napi-build-command` | Command to call `napi build`. Use as alias to build napi binding package. You can pass `--release` to build optimized release binaries ([see all options](https://napi.rs/docs/cli/build#options)) | No       | `pnpm build`                  |
+| Name                 | Description                                                                                                                                                                                                                                                                                                                 | Required | Default                       |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------- |
+| `package-json-path`  | Path to binding `package.json`. Same as `--package-json-path` in `@napi-rs/cli build`                                                                                                                                                                                                                                       | No       | `crates/binding/package.json` |
+| `napi-build-command` | Command to call `napi build`. Use as alias to build napi binding package. You can pass `--release` to build optimized release binaries ([see all options](https://napi.rs/docs/cli/build#options)). **Note**: Different package managers require different syntax for argument passing (see package manager examples above) | No       | `pnpm build`                  |
 
 #### Usage
 
@@ -141,15 +213,25 @@ jobs:
     uses: rspack-contrib/rspack-toolchain/.github/workflows/build.yml@main
     with:
       package-json-path: crates/binding/package.json
+      # pnpm example (arguments passed directly)
       napi-build-command: pnpm build --release
+
+      # npm example (requires -- separator)
+      # napi-build-command: npm run build -- --release
+
+      # yarn example (requires -- separator)
+      # napi-build-command: yarn build -- --release
 ```
 
 ## 🔧 Package.json Configuration
 
-For the `get-napi-info` action to work properly, your `package.json` should include a `napi.targets` array:
+For the `get-napi-info` action to work properly, your `package.json` should include both a `napi.targets` array and a `build` script that executes `napi build`:
 
 ```json
 {
+  "scripts": {
+    "build": "napi build --platform"
+  },
   "napi": {
     "targets": [
       "x86_64-apple-darwin",
@@ -160,6 +242,8 @@ For the `get-napi-info` action to work properly, your `package.json` should incl
   }
 }
 ```
+
+The `build` script should execute the `napi build` command, which allows the action to pass additional arguments like `--target` and `--release` through your package manager.
 
 ## 🚀 Complete Workflow Example
 
