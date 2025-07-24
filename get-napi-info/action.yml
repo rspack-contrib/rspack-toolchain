@@ -6,7 +6,7 @@ inputs:
     required: false
     default: 'crates/binding/package.json'
   napi-build-command:
-    description: 'Command to call napi build'
+    description: 'Command to call napi build. Use this option as an alias to build napi binding package. The directory of the package.json file is the working directory of the command.'
     required: false
     default: 'pnpm build'
 outputs:
