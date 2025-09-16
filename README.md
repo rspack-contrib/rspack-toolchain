@@ -29,12 +29,12 @@ Downloads rspack binding artifacts from GitHub Actions workflow runs. Supports d
 
 ```yaml
 # Download all binding artifacts
-- uses: rspack-contrib/rspack-toolchain/download-rspack-binding@v1
+- uses: rspack-contrib/rspack-toolchain/download-rspack-binding@v1.0.3-canary.0
   with:
     path: artifacts
 
 # Download specific target binding
-- uses: rspack-contrib/rspack-toolchain/download-rspack-binding@v1
+- uses: rspack-contrib/rspack-toolchain/download-rspack-binding@v1.0.3-canary.0
   with:
     target: x86_64-apple-darwin
     path: artifacts
@@ -84,7 +84,7 @@ Here are the correct syntax patterns for each package manager:
 With pnpm, you can pass arguments directly to the script:
 
 ```yaml
-- uses: rspack-contrib/rspack-toolchain/get-napi-info@v1
+- uses: rspack-contrib/rspack-toolchain/get-napi-info@v1.0.3-canary.0
   with:
     napi-build-command: pnpm build
     # Will generate: pnpm build --target x86_64-apple-darwin
@@ -102,7 +102,7 @@ napi-build-command: pnpm build --release
 With npm, you need to use the `--` separator when your script needs additional arguments:
 
 ```yaml
-- uses: rspack-contrib/rspack-toolchain/get-napi-info@v1
+- uses: rspack-contrib/rspack-toolchain/get-napi-info@v1.0.3-canary.0
   with:
     napi-build-command: npm run build --
     # Will generate: npm run build -- --target x86_64-apple-darwin
@@ -120,7 +120,7 @@ napi-build-command: npm run build -- --release
 With yarn, similar to npm, you need the `--` separator:
 
 ```yaml
-- uses: rspack-contrib/rspack-toolchain/get-napi-info@v1
+- uses: rspack-contrib/rspack-toolchain/get-napi-info@v1.0.3-canary.0
   with:
     napi-build-command: yarn build --
     # Will generate: yarn build -- --target x86_64-apple-darwin
@@ -167,7 +167,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: napi
-        uses: rspack-contrib/rspack-toolchain/get-napi-info@v1
+        uses: rspack-contrib/rspack-toolchain/get-napi-info@v1.0.3-canary.0
         with:
           package-json-path: packages/binding/package.json
           napi-build-command: pnpm build
@@ -210,7 +210,7 @@ A reusable workflow that automatically builds native bindings for all platforms 
 jobs:
   build:
     name: Build
-    uses: rspack-contrib/rspack-toolchain/.github/workflows/build.yml@v1
+    uses: rspack-contrib/rspack-toolchain/.github/workflows/build.yml@v1.0.3-canary.0
     with:
       package-json-path: crates/binding/package.json
       # pnpm example (arguments passed directly)
