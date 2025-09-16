@@ -58,8 +58,6 @@ jobs:
           architecture: x86
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.settings.target }}
       # Skip installing Rust target when using cross as it manages targets internally
       # See: https://github.com/cross-rs/cross/blob/main/docs/getting-started.md?plain=1#L113
       - name: Install additional Rust target
