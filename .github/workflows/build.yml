@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Get NAPI Info
         id: napi-info
-        uses: rspack-contrib/rspack-toolchain/get-napi-info@v1.0.3-canary.1
+        uses: rspack-contrib/rspack-toolchain/get-napi-info@v1.0.3
         with:
           package-json-path: ${{ inputs.package-json-path }}
           napi-build-command: ${{ inputs.napi-build-command }}
