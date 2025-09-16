@@ -153,6 +153,12 @@ The action supports the following target platforms:
 | `armv7-unknown-linux-gnueabihf` | `ubuntu-22.04`   | Linux ARMv7         |
 | `aarch64-linux-android`         | `ubuntu-22.04`   | Android ARM64       |
 | `armv7-linux-androideabi`       | `ubuntu-22.04`   | Android ARMv7       |
+| `x86_64-unknown-freebsd`        | `ubuntu-22.04`   | FreeBSD x64         |
+| `aarch64-unknown-freebsd`       | `ubuntu-22.04`   | FreeBSD ARM64¹      |
+| `riscv64gc-unknown-linux-gnu`   | `ubuntu-22.04`   | RISC-V 64-bit (GNU) |
+| `riscv64gc-unknown-linux-musl`  | `ubuntu-22.04`   | RISC-V 64-bit (musl)|
+
+¹ Uses `-Zbuild-std=core,std,alloc,proc_macro,panic_abort` due to [rust-lang/rust#80685](https://github.com/rust-lang/rust/issues/80685)
 
 #### Usage
 

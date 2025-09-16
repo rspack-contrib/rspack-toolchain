@@ -100,6 +100,18 @@ runs:
             "aarch64-pc-windows-msvc")
               echo '{"host": "windows-latest", "target": "aarch64-pc-windows-msvc", "build": "${{ inputs.napi-build-command }} --target aarch64-pc-windows-msvc"}'
               ;;
+            "x86_64-unknown-freebsd")
+              echo '{"host": "ubuntu-22.04", "target": "x86_64-unknown-freebsd", "build": "${{ inputs.napi-build-command }} --target x86_64-unknown-freebsd --use-cross"}'
+              ;;
+            "aarch64-unknown-freebsd")
+              echo '{"host": "ubuntu-22.04", "target": "aarch64-unknown-freebsd", "build": "${{ inputs.napi-build-command }} --target aarch64-unknown-freebsd --use-cross -- -Zbuild-std=core,std,alloc,proc_macro,panic_abort"}'
+              ;;
+            "riscv64gc-unknown-linux-gnu")
+              echo '{"host": "ubuntu-22.04", "target": "riscv64gc-unknown-linux-gnu", "build": "${{ inputs.napi-build-command }} --target riscv64gc-unknown-linux-gnu --use-cross"}'
+              ;;
+            "riscv64gc-unknown-linux-musl")
+              echo '{"host": "ubuntu-22.04", "target": "riscv64gc-unknown-linux-musl", "build": "${{ inputs.napi-build-command }} --target riscv64gc-unknown-linux-musl --use-cross"}'
+              ;;
             *)
               echo ""
               ;;
