@@ -12,6 +12,11 @@ on:
         required: false
         default: 'pnpm build'
         type: string
+      working-directory:
+        description: 'The working directory for all commands'
+        required: false
+        default: '.'
+        type: string
 
 env:
   DEBUG: napi:*
@@ -58,11 +63,14 @@ jobs:
           architecture: x86
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: nightly-2025-05-30
       # Skip installing Rust target when using cross as it manages targets internally
       # See: https://github.com/cross-rs/cross/blob/main/docs/getting-started.md?plain=1#L113
       - name: Install additional Rust target
         if: ${{ !contains(matrix.settings.build, 'use-cross') }}
         run: rustup target add ${{ matrix.settings.target }}
+        working-directory: ${{ inputs.working-directory }}
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
@@ -87,6 +95,7 @@ jobs:
         run: cargo install cross --git https://github.com/cross-rs/cross
       - name: Install dependencies
         run: pnpm install
+        working-directory: ${{ inputs.working-directory }}
       - name: Build
         run: ${{ matrix.settings.build }}
         working-directory: ${{ needs.get-napi-info.outputs.binding-directory }}
