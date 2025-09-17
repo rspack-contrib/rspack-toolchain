@@ -70,6 +70,9 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ inputs.rust-toolchain }}
+      - name: Set default toolchain
+        run: rustup default ${{ inputs.rust-toolchain }}
+        working-directory: ${{ inputs.working-directory }}
       # Skip installing Rust target when using cross as it manages targets internally
       # See: https://github.com/cross-rs/cross/blob/main/docs/getting-started.md?plain=1#L113
       - name: Install additional Rust target
