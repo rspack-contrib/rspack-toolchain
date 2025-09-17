@@ -17,6 +17,11 @@ on:
         required: false
         default: '.'
         type: string
+      rust-toolchain:
+        description: 'Rust toolchain specification -- see https://rust-lang.github.io/rustup/concepts/toolchains.html#toolchain-specification'
+        required: false
+        default: 'stable'
+        type: string
 
 env:
   DEBUG: napi:*
@@ -64,7 +69,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: nightly-2025-05-30
+          toolchain: ${{ inputs.rust-toolchain }}
       # Skip installing Rust target when using cross as it manages targets internally
       # See: https://github.com/cross-rs/cross/blob/main/docs/getting-started.md?plain=1#L113
       - name: Install additional Rust target
