@@ -12,6 +12,11 @@ on:
         required: false
         default: 'pnpm build'
         type: string
+      working-directory:
+        description: 'The working directory for all commands'
+        required: false
+        default: '.'
+        type: string
 
 env:
   DEBUG: napi:*
@@ -63,6 +68,7 @@ jobs:
       - name: Install additional Rust target
         if: ${{ !contains(matrix.settings.build, 'use-cross') }}
         run: rustup target add ${{ matrix.settings.target }}
+        working-directory: ${{ inputs.working-directory }}
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
@@ -87,6 +93,7 @@ jobs:
         run: cargo install cross --git https://github.com/cross-rs/cross
       - name: Install dependencies
         run: pnpm install
+        working-directory: ${{ inputs.working-directory }}
       - name: Build
         run: ${{ matrix.settings.build }}
         working-directory: ${{ needs.get-napi-info.outputs.binding-directory }}
